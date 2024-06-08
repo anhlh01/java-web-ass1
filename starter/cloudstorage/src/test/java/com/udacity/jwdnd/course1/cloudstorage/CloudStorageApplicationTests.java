@@ -1,5 +1,8 @@
 package com.udacity.jwdnd.course1.cloudstorage;
 
+import com.udacity.jwdnd.course1.cloudstorage.page.HomePage;
+import com.udacity.jwdnd.course1.cloudstorage.page.LoginPage;
+import com.udacity.jwdnd.course1.cloudstorage.page.SignUpPage;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
@@ -23,7 +26,7 @@ class CloudStorageApplicationTests {
 
 	@BeforeAll
 	static void beforeAll() {
-		WebDriverManager.chromedriver().setup();
+		WebDriverManager.chromedriver().clearResolutionCache().setup();
 	}
 
 	@BeforeEach
@@ -42,6 +45,114 @@ class CloudStorageApplicationTests {
 	public void getLoginPage() {
 		driver.get("http://localhost:" + this.port + "/login");
 		Assertions.assertEquals("Login", driver.getTitle());
+	}
+
+	@Test
+	public void cannotAccessToHomepageWhenNotLogin() {
+		driver.get("http://localhost:" + this.port + "/home");
+		Assertions.assertEquals("Login", driver.getTitle());
+	}
+
+	private void signUpAndLogin() {
+		driver.get("http://localhost:" + this.port + "/signup");
+		SignUpPage signUpPage = new SignUpPage(driver);
+		signUpPage.signUp("anh", "anh", "anhvuive", "password");
+		Assertions.assertEquals("Login", driver.getTitle());
+		LoginPage loginPage = new LoginPage(driver);
+		loginPage.login("anhvuive", "password");
+		Assertions.assertEquals("Home", driver.getTitle());
+	}
+
+	@Test
+	public void signUpAndLoginFlow() {
+		driver.get("http://localhost:" + this.port + "/signup");
+		SignUpPage signUpPage = new SignUpPage(driver);
+		signUpPage.signUp("anh", "anh", "anhvuive", "password");
+		Assertions.assertEquals("Login", driver.getTitle());
+		LoginPage loginPage = new LoginPage(driver);
+		loginPage.login("anhvuive", "password");
+		Assertions.assertEquals("Home", driver.getTitle());
+		HomePage homePage = new HomePage(driver);
+		homePage.logout();
+		Assertions.assertEquals("Login", driver.getTitle());
+		driver.get("http://localhost:" + this.port + "/home");
+		Assertions.assertEquals("Login", driver.getTitle());
+	}
+
+	@Test
+	public void addNewNote() {
+		signUpAndLogin();
+		HomePage homePage = new HomePage(driver);
+		String noteTitle = "new note title";
+		String noteDescription = "new note description";
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		homePage.clickNotesTab();
+		webDriverWait.until(ExpectedConditions.visibilityOf(homePage.getAddNewNoteButton()));
+		webDriverWait = new WebDriverWait(driver, 2);
+		homePage.clickAddNewNoteButton();
+		webDriverWait.until(ExpectedConditions.visibilityOf(homePage.getNotePopupTitle()));
+		homePage.addNewNote(noteTitle, noteDescription);
+		Assertions.assertTrue(homePage.checkContainNote(noteTitle));
+	}
+
+	@Test
+	public void addNewCredential() {
+		signUpAndLogin();
+		HomePage homePage = new HomePage(driver);
+		String url = "https://www.youtube.com/watch?v=wqJKy-2k5Po";
+		String username = "username";
+		String password = "password";
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		homePage.clickCredentialsTab();
+		webDriverWait.until(ExpectedConditions.visibilityOf(homePage.getCredentialAddButton()));
+		webDriverWait = new WebDriverWait(driver, 2);
+		homePage.clickAddNewCredentialButton();
+		webDriverWait.until(ExpectedConditions.visibilityOf(homePage.getCredentialsPopupTitle()));
+		homePage.addNewCredential(url, username, password);
+		Assertions.assertTrue(homePage.checkContainCredential(url));
+	}
+
+	@Test
+	public void deleteANote() {
+		addNewNote();
+		HomePage homePage = new HomePage(driver);
+		String noteTitle = homePage.deleteNote();
+		Assertions.assertFalse(homePage.checkContainNote(noteTitle));
+	}
+
+	@Test
+	public void deleteCredential() {
+		addNewCredential();
+		HomePage homePage = new HomePage(driver);
+		String credentialUrl = homePage.deleteCredential();
+		Assertions.assertFalse(homePage.checkContainCredential(credentialUrl));
+	}
+
+	@Test
+	public void updateANote() {
+		addNewNote();
+		HomePage homePage = new HomePage(driver);
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		homePage.clickEditNoteButton();
+		webDriverWait.until(ExpectedConditions.visibilityOf(homePage.getNotePopupTitle()));
+		String noteTitle = "note title";
+		String noteDescription = "note description";
+		homePage.editNote(noteTitle, noteDescription);
+		Assertions.assertTrue(homePage.checkContainNote(noteTitle));
+	}
+
+	@Test
+	public void updateACredential() {
+		addNewCredential();
+		HomePage homePage = new HomePage(driver);
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		homePage.clickEditCredentialButton();
+		webDriverWait.until(ExpectedConditions.visibilityOf(homePage.getCredentialsPopupTitle()));
+		String url = "https://www.youtube.com/watch?v=wqJKy-2k5Po-123";
+		String username = "newusername";
+		String password = "newpassword";
+		homePage.editCredential(url, username, password);
+		Assertions.assertTrue(homePage.checkContainCredential(url));
 	}
 
 	/**

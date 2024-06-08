@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Controller
 @RequestMapping("/file")
 public class FileController {
-    private FileService fileService;
+    private final FileService fileService;
 
     public FileController(FileService fileService) {
         this.fileService = fileService;

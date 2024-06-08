@@ -16,15 +16,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/home")
 public class HomeController {
     private FileService fileService;
+    private NoteService noteService;
+    private CredentialService credentialService;
 
-    public HomeController(FileService fileService) {
+    public HomeController(FileService fileService, NoteService noteService, CredentialService credentialService) {
         this.fileService = fileService;
+        this.noteService = noteService;
+        this.credentialService = credentialService;
     }
 
     @GetMapping
     public String home(Model model, Authentication authentication) {
         model.addAttribute("text", "file");
         model.addAttribute("files", fileService.getFiles(authentication));
+        model.addAttribute("notes", noteService.getAllNotes(authentication));
+        model.addAttribute("credentials", credentialService.getAllCredentials(authentication));
         return "home";
     }
 }
